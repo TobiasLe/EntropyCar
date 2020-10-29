@@ -2,54 +2,10 @@ import bpy
 import numpy as np
 from math import pi
 from mathutils import Vector
+
+
 # import pydevd_pycharm
 # result = pydevd_pycharm.settrace('localhost', port=1090, stdoutToServer=True, stderrToServer=True)
-
-
-def simulate(grid_shapes, marbles_per_grid, n_steps):
-    tunnels = [(np.array((-1, 0, 0, 0)), np.array((0, 0, 0, 1))),
-               (np.array((-1, 0, 0, 1)), np.array((0, 0, 0, 0)))]
-
-    n_marbles = sum(marbles_per_grid)
-    moves = np.array([[1, 0, 0, 0],
-                      [-1, 0, 0, 0],
-                      [0, 1, 0, 0],
-                      [0, -1, 0, 0]], dtype=np.int)
-
-    occupations = [np.zeros(grid_shape, dtype=np.bool) for grid_shape in grid_shapes]
-
-    for current_n_marbles, occupation in zip(marbles_per_grid, occupations):
-        occupation.flat[np.random.choice(occupation.size, current_n_marbles, replace=False)] = 1
-
-    trajectory = np.zeros((n_steps, n_marbles, len(grid_shapes[0])+1), dtype=np.int)
-    all_locations = []
-    for i, occupation in enumerate(occupations):
-        locations = np.argwhere(occupation == 1)
-        locations = np.concatenate((locations, i*np.ones((locations.shape[0], 1))), axis=1)
-        all_locations.append(locations)
-
-    trajectory[0] = np.concatenate(all_locations, axis=0)
-
-    for step in range(1, n_steps):
-        while True:
-            selected_marble = np.random.choice(n_marbles)
-            current_position = trajectory[step-1, selected_marble]
-            new_position = current_position + moves[np.random.choice(moves.shape[0])]
-
-            for tunnel in tunnels:
-                if np.array_equal(new_position, tunnel[0]):
-                    new_position = tunnel[1]
-
-            if np.all(new_position[:-1] < grid_shapes[new_position[-1]]) and \
-                    np.all(new_position >= 0):
-                if not occupations[new_position[-1]][tuple(new_position[:-1])]:
-                    trajectory[step] = trajectory[step - 1]
-                    trajectory[step, selected_marble] = new_position
-                    occupations[current_position[-1]][tuple(current_position[:-1])] = False
-                    occupations[new_position[-1]][tuple(new_position[:-1])] = True
-                    break
-
-    return trajectory
 
 
 def add_collection(name, activate=True, clear=False):
@@ -122,11 +78,23 @@ def grid_location(xyzg, grids):
 
 
 def main():
+    scene_path = r"X:\Google Drive\MarbleScience\projects\004_EntropyCar\scene.blend"
+    trajectory_path = r"C:\Users\Tobias\coding\MarbleScience\004_EntropyCar\runs\run0\trajectory.npy"
     grid_shapes = [(3, 3, 1), (5, 5, 1)]
-    grid_origins = [(-3.12, -2.58, 1.74), (5, 5, 0)]
+    grid_origins = [(-0.024158, -2.58, 0.714009), (-10.2217, 0, 0)]
     marbles_per_grid = [9, 0]
     n_marbles = sum(marbles_per_grid)
     n_steps = 1000
+
+    trajectory = np.load(trajectory_path)
+
+    with bpy.data.libraries.load(scene_path, link=False) as (data_from, data_to):
+        data_to.scenes = data_from.scenes
+
+    bpy.data.scenes.remove(bpy.context.scene)
+    scene = bpy.context.scene
+    scene.render.fps = 30
+    scene.frame_end = n_steps
 
     car_body = bpy.data.objects["car_body"]
     grids_collection = add_collection("grids", clear=True)
@@ -142,62 +110,43 @@ def main():
     for marble in marbles:
         marble.parent = grids[0]
 
-    trajectory = simulate(grid_shapes, marbles_per_grid, n_steps)
-
     car_body.animation_data.action = None
     car_body.location[0] = 4.20
     car_body.keyframe_insert(data_path="location", frame=0)
 
     frame_i = 0
-    for step_i in range(n_steps):
+    for marble_i, marble in enumerate(marbles):
+        marble.location = grid_location(trajectory[0, marble_i], grids)
+        marble.keyframe_insert(data_path="location", frame=0)
+
+    for step_i in range(1, n_steps):
         for marble_i, marble in enumerate(marbles):
             grid_i = trajectory[step_i, marble_i, -1]
-
-            if step_i > 0:
-                delta_grid = grid_i-trajectory[step_i-1, marble_i, -1]
-            else:
-                delta_grid = 0
+            delta_grid = grid_i - trajectory[step_i - 1, marble_i, -1]
 
             if delta_grid == 0:
+                marble.keyframe_insert(data_path="location", frame=frame_i + 1)
                 marble.location = grid_location(trajectory[step_i, marble_i], grids)
-                marble.keyframe_insert(data_path="location", frame=frame_i)
+                marble.keyframe_insert(data_path="location", frame=frame_i + 4)
 
-            elif delta_grid == 1:
-                strip = marble.animation_data.nla_tracks["motor_track"].strips.new(name="sphere_action",
-                                                                                   start=frame_i,
-                                                                                   action=bpy.data.actions[
-                                                                                       "SphereAction"])
-                strip.blend_type = "ADD"
-                car_body.keyframe_insert(data_path="location", frame=frame_i+13)
-                car_body.location[0] += pi/2 * 1.326
-                car_body.keyframe_insert(data_path="location", frame=frame_i+29)
-
-                marble.keyframe_insert(data_path="location", frame=frame_i+45)
-                marble.location = grid_location(trajectory[step_i, marble_i], grids)
-                marble.keyframe_insert(data_path="location", frame=frame_i+50)
-                frame_i += 50
-
-            elif delta_grid == -1:
-                strip = marble.animation_data.nla_tracks["motor_track"].strips.new(name="back_sphere_action",
-                                                                                   start=frame_i,
-                                                                                   action=bpy.data.actions[
-                                                                                       "back_sphere_action"])
-                strip.blend_type = "ADD"
-                car_body.keyframe_insert(data_path="location", frame=frame_i + 13)
-                car_body.location[0] -= pi/2 * 1.326
-                car_body.keyframe_insert(data_path="location", frame=frame_i + 29)
-
-                marble.keyframe_insert(data_path="location", frame=frame_i)
-                marble.location = grid_location(trajectory[step_i, marble_i], grids)
+            else:
                 marble.keyframe_insert(data_path="location", frame=frame_i + 5)
-                frame_i += 50
-        frame_i += 3
-    bpy.context.scene.frame_end = frame_i
+                marble.location = grid_location(trajectory[step_i, marble_i], grids)
+                marble.keyframe_insert(data_path="location", frame=frame_i + 40)
 
-    for marble in marbles:
-        strip = marble.animation_data.nla_tracks["main_track"].strips.new(name="main_action", start=0, action=marble.animation_data.action)
-        marble.animation_data.action = None
-        strip.blend_type = "ADD"
+                if delta_grid == 1:
+                    car_body.keyframe_insert(data_path="location", frame=frame_i + 18)
+                    car_body.location[0] += pi / 2 * 1.326 * delta_grid
+                    car_body.keyframe_insert(data_path="location", frame=frame_i + 24)
+                if delta_grid == -1:
+                    car_body.keyframe_insert(data_path="location", frame=frame_i + 21)
+                    car_body.location[0] += pi / 2 * 1.326 * delta_grid
+                    car_body.keyframe_insert(data_path="location", frame=frame_i + 27)
 
+                frame_i += 40
+
+        frame_i += 5
+
+    scene.frame_end = frame_i
 
 main()
