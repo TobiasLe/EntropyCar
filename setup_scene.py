@@ -107,5 +107,5 @@ for marble in marbles:
     marble.data.materials.append(bpy.data.materials["Orange"])
 
 car_body.animation_data.action = None
-car_body.location[0] = 4.20
+car_body.location[0] = 0
 car_body.keyframe_insert(data_path="location", frame=0)

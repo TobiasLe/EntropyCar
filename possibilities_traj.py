@@ -103,7 +103,7 @@ for marble in marbles:
             kf.interpolation = 'CONSTANT'
 
 number_of_permutations = number_of_permutations_on_grids(n_marbles, [np.prod(g) for g in grid_shapes])
-figure = bpyplot.Figure(shape=(11 * car_delta_x, 5 * car_delta_x))
+figure = bpyplot.Figure(shape=(10 * car_delta_x, 5 * car_delta_x))
 figure.figure_origin.rotation_euler[0] = pi / 2
 figure.figure_origin.location = [-0.5 * car_delta_x, 6.4, 9]
 figure.bar_chart(number_of_permutations, set_extent=False, animated=True, frames=[[f, f + 90] for f in car_frames])
@@ -121,7 +121,7 @@ for i in range(math.ceil(math.log10(ylim))):
 labels = list(set(labels))
 figure.axes[1].set_ticks(labels)
 
-extent = [[-0.5, 10.5], [0, 1.1]]
+extent = [[-0.5, 9.5], [0, 1.1]]
 for i, frames in enumerate(car_frames):
     figure.add_extent_keyframe(frames + 5, extent)
     extent[1][1] = max(number_of_permutations[:i + 1]) * 1.1
