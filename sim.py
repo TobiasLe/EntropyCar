@@ -5,7 +5,8 @@ import os
 
 def simulate(grid_shapes, marbles_per_grid, n_steps):
     tunnels = [(np.array((-1, 0, 0, 0)), np.array((4, 0, 0, 1))),  # format: x, y, z, grind
-               (np.array((5, 0, 0, 1)), np.array((0, 0, 0, 0)))]
+               (np.array((5, 0, 0, 1)), np.array((0, 0, 0, 0)))
+               ]
 
     n_marbles = sum(marbles_per_grid)
     moves = np.array([[1, 0, 0, 0],

@@ -1,6 +1,7 @@
 from math import factorial
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.special
 
 
 def number_of_permutations_on_grids(n_objects, grid_spaces):
@@ -11,7 +12,8 @@ def number_of_permutations_on_grids(n_objects, grid_spaces):
         print(n_marbles)
         possibilities = [None, None]
         for i, (g, n) in enumerate(zip(grid_spaces, n_marbles)):
-            possibilities[i] = factorial(g) / factorial(g - n) / factorial(n)
+            # possibilities[i] = factorial(g) / factorial(g - n) / factorial(n)
+            possibilities[i] = scipy.special.comb(g, n)
         print(possibilities[0] * possibilities[1])
         all_possibilities.append(possibilities[0] * possibilities[1])
     return all_possibilities
@@ -20,6 +22,10 @@ def number_of_permutations_on_grids(n_objects, grid_spaces):
 if __name__ == '__main__':
     n_marbles = 9
     grid_spaces = [9, 25]
+    # n_marbles = 36
+    # grid_spaces = [36, 100]
+    # n_marbles = 9*16
+    # grid_spaces = [9*16, 25*16]
 
     number_of_permutations = number_of_permutations_on_grids(n_marbles, grid_spaces)
 
