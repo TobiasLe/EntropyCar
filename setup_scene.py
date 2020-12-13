@@ -99,6 +99,13 @@ grids[0].rotation_euler = (pi / 2, 0, 0)
 grids[0].parent = car_body
 grids[1].parent = grids[0]
 
+grid_material = bpy.data.materials.new(name="GridMaterial")
+grid_material.use_nodes = True
+grid_material.node_tree.nodes["Principled BSDF"].inputs[7].default_value = 0.2
+grid_material.node_tree.nodes["Principled BSDF"].inputs[15].default_value = 0.9
+for grid in grids:
+    grid.data.materials.append(grid_material)
+
 # create marbles
 marbles_collection = add_collection("marbles", clear=True)
 marbles = create_marbles(n_marbles)
