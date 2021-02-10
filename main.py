@@ -9,7 +9,7 @@ print(os.getcwd())
 # import pydevd_pycharm
 # result = pydevd_pycharm.settrace('localhost', port=1090, stdoutToServer=True, stderrToServer=True)
 
-trajectory_path = r"C:\Users\Tobias\coding\MarbleScience\004_EntropyCar\runs\run4\trajectory.npy"
+trajectory_path = r"C:\Users\Tobias\coding\MarbleScience\004_EntropyCar\runs\run1\trajectory.npy"
 trajectory = np.load(trajectory_path)
 
 frame_i = 0

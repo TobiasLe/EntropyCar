@@ -101,8 +101,9 @@ grids[1].parent = grids[0]
 
 grid_material = bpy.data.materials.new(name="GridMaterial")
 grid_material.use_nodes = True
+grid_material.node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.3, 0.3, 0.3, 1)
 grid_material.node_tree.nodes["Principled BSDF"].inputs[7].default_value = 0.2
-grid_material.node_tree.nodes["Principled BSDF"].inputs[15].default_value = 0.9
+# grid_material.node_tree.nodes["Principled BSDF"].inputs[15].default_value = 0.9
 for grid in grids:
     grid.data.materials.append(grid_material)
 
