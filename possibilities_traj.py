@@ -52,9 +52,9 @@ def permutations_on_grid(shape, number_of_objects):
     return results
 
 
-max_frames = [20 * 30] * 2 + [10 * 30] * n_marbles
-frames_per_iter = [1] * 2 + [0.5] + [0.1] * n_marbles
-min_frames = 5 * 30
+max_frames = [20 * 30] * 2 + [10 * 30] + [5 * 30] + [3*30] * n_marbles
+frames_per_iter = [1] * 2 + [0.5] + [0.1] + [0.01] * n_marbles
+min_frames = 3 * 30
 car_delta_x = pi / 2 * 1.326
 
 grid_shapes = [s[:2] for s in grid_shapes]
@@ -79,16 +79,20 @@ for x in range(n_marbles + 1):
             marble.location = grid_location([*all_permutations[0][i, marble_i], 0, 0], grids)
             marble.keyframe_insert(data_path="location", frame=frame_i)
 
-        frame_i += frames_per_iter[x]
-        iters += frames_per_iter[x]
-        for j in range(len(all_permutations[1])):
+        frame_i += max(1, frames_per_iter[x])
+        iters += max(1, frames_per_iter[x])
+        if frames_per_iter[x] < 1:
+            loop_range = range(0, len(all_permutations[1]), int(1/frames_per_iter[x]))
+        else:
+            loop_range = range(len(all_permutations[1]))
+        for j in loop_range:
             if iters > max_frames[x]:
                 break
             for marble_i, marble in enumerate(marbles[:x]):
                 marble.location = grid_location([*all_permutations[1][j, marble_i], 0, 1], grids)
                 marble.keyframe_insert(data_path="location", frame=frame_i)
-            frame_i += frames_per_iter[x]
-            iters += frames_per_iter[x]
+            frame_i += max(1, frames_per_iter[x])
+            iters += max(1, frames_per_iter[x])
 
     if frame_i - car_frames[-1] < min_frames:
         frame_i = car_frames[-1] + min_frames
